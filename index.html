@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>XAU/USD Dashboard</title>
 
-  <!-- Fonte e estilo básico -->
+  <!-- Estilo -->
   <style>
     body {
       background-color: #0d0d0d;
@@ -14,19 +14,8 @@
       margin: 0;
       padding: 20px;
     }
-
-    h1 {
-      font-size: 32px;
-      margin-top: 20px;
-    }
-
-    #price {
-      font-size: 40px;
-      font-weight: bold;
-      margin-top: 10px;
-      color: #ffd700;
-    }
-
+    h1 { font-size: 30px; margin-top: 10px; }
+    #price { font-size: 42px; color: #ffd700; margin-top: 15px; }
     #chart-container {
       width: 90%;
       max-width: 800px;
@@ -34,43 +23,43 @@
     }
   </style>
 
-  <!-- Importando Chart.js -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   <h1>XAU/USD Dashboard</h1>
-  <div id="price">Carregando...</div>
+  <div id="price">Carregando preço...</div>
 
   <div id="chart-container">
     <canvas id="chart"></canvas>
   </div>
 
   <script>
-    async function getPrice() {
+    async function getGoldPrice() {
       try {
-        const res = await fetch("https://api.metals.live/v1/spot");
-        const data = await res.json();
-        return data[0].gold; // preço do ouro (XAU/USD)
-      } catch {
+        const response = await fetch("https://data-asg.goldprice.org/dbXRates/USD");
+        const data = await response.json();
+        return data.items[0].xauPrice; // preço XAU/USD
+      } catch(err) {
         return null;
       }
     }
 
-    let chart, prices = [];
+    let prices = [];
+    let chart;
 
-    async function updateDashboard() {
-      const price = await getPrice();
-
+    async function update() {
+      const price = await getGoldPrice();
       if (!price) {
-        document.getElementById("price").innerText = "Erro ao obter preço.";
+        document.getElementById("price").innerText = "Erro ao obter preço";
         return;
       }
 
       document.getElementById("price").innerText = "$ " + price.toFixed(2);
-      prices.push(price);
 
-      if (prices.length > 20) prices.shift();
+      prices.push(price);
+      if (prices.length > 30) prices.shift();
 
       if (!chart) {
         chart = new Chart(document.getElementById("chart"), {
@@ -78,27 +67,9 @@
           data: {
             labels: prices.map((_, i) => i + 1),
             datasets: [{
-              label: 'XAU/USD (Preço ao vivo)',
+              label: "XAU/USD",
               data: prices,
-              borderColor: 'gold',
-              borderWidth: 2,
+              borderColor: "gold",
+              borderWidth: 3,
               pointRadius: 0
             }]
-          },
-          options: {
-            scales: { y: { beginAtZero: false } },
-            animations: false
-          }
-        });
-      } else {
-        chart.data.datasets[0].data = prices;
-        chart.update();
-      }
-    }
-
-    updateDashboard();
-    setInterval(updateDashboard, 5000);
-  </script>
-
-</body>
-</html>
