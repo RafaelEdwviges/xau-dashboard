@@ -1,12 +1,86 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>XAUUSD Dashboard</title>
+  <title>XAU/USD Dashboard</title>
+
+  <!-- Import CDN do Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #price {
+      font-size: 42px;
+      font-weight: bold;
+      margin-bottom: 25px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+  </style>
 </head>
+
 <body>
-  <h1 style="text-align:center;">XAU/USD Dashboard</h1>
-  <p style="text-align:center;">Página inicial do dashboard. Em breve adicionaremos gráficos e dados ao vivo.</p>
+  <h1>XAU/USD Dashboard</h1>
+  <div id="price">Carregando...</div>
+
+  <div class="container">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <script>
+    async function getPrice() {
+      const response = await fetch("https://api.goldapi.io/api/XAU/USD", {
+        headers: { "x-access-token": "goldapi-4t2e0y0cgv0n2-io" }
+      });
+
+      const data = await response.json();
+      return data.price;
+    }
+
+    let chart, prices = [];
+
+    async function updateDashboard() {
+      const price = await getPrice();
+      document.getElementById("price").innerText = "$ " + price.toFixed(2);
+      prices.push(price);
+
+      if (prices.length > 20) prices.shift();
+
+      if (!chart) {
+        chart = new Chart(document.getElementById("chart"), {
+          type: 'line',
+          data: {
+            labels: prices.map((_, i) => i + 1),
+            datasets: [{
+              label: 'XAU/USD',
+              data: prices,
+              borderWidth: 2
+            }]
+          }
+        });
+      } else {
+        chart.data.datasets[0].data = prices;
+        chart.update();
+      }
+    }
+
+    setInterval(updateDashboard, 5000);
+    updateDashboard();
+  </script>
+
 </body>
 </html>
