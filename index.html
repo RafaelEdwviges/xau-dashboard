@@ -1,36 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dashboard XAU/USD</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard XAU/USD</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <!-- Tailwind CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 
-<style>
-  body { background: #f6f7f9; font-family: Arial, sans-serif; }
-</style>
-
+  <style>
+    body { background: #f4f6f9; font-family: Arial, sans-serif; }
+  </style>
 </head>
+
 <body class="p-6">
 
-<h1 class="text-3xl font-bold mb-2">XAU/USD Dashboard</h1>
-<p class="text-sm text-gray-600 mb-6">Monitoramento do Ouro em Tempo Real</p>
+  <h1 class="text-3xl font-bold mb-1">Dashboard XAU/USD</h1>
+  <p class="text-sm text-gray-600 mb-6">Monitoramento do Ouro em Tempo Real</p>
 
-<!-- Carrega primeiro -->
-<script src="https://s3.tradingview.com/tv.js"></script>
+  <!-- ======= GRÁFICO DO OURO ======= -->
+  <div class="bg-white shadow rounded-xl p-4 mb-8">
+    <h2 class="text-lg font-semibold mb-3">Preço XAU/USD — Tempo Real</h2>
+    <div id="tradingview_chart" style="height: 450px;"></div>
+  </div>
 
-<!-- GRÁFICO TRADINGVIEW -->
-<div class="bg-white shadow rounded-xl p-4 mb-8">
-  <h2 class="text-lg font-semibold mb-3">Preço XAU/USD — Tempo Real</h2>
-  <div id="tradingview_chart" style="height:420px;"></div>
-
+  <!-- Carrega TradingView -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    window.addEventListener("load", function () {
       new TradingView.widget({
-        "width": "100%",
-        "height": 420,
+        "container_id": "tradingview_chart",
         "symbol": "OANDA:XAUUSD",
+        "width": "100%",
+        "height": 450,
         "interval": "15",
         "timezone": "America/Sao_Paulo",
         "theme": "light",
@@ -39,21 +41,19 @@
         "toolbar_bg": "#f1f3f6",
         "enable_publishing": false,
         "hide_top_toolbar": false,
-        "allow_symbol_change": true,
-        "container_id": "tradingview_chart"
+        "allow_symbol_change": true
       });
     });
   </script>
-</div>
 
-<!-- CALENDÁRIO -->
-<div class="bg-white shadow rounded-xl p-4">
-  <h2 class="text-lg font-semibold mb-3">Calendário Econômico (Hoje)</h2>
-  <iframe 
-      src="https://sslecal2.investing.com?ecoDay=0&columns=exc_flags,exc_country,exc_time,exc_event,exc_actual,exc_forecast,exc_previous&importance=3"
-      width="100%" height="450" frameborder="0" allowfullscreen>
-  </iframe>
-</div>
+  <!-- ======= CALENDÁRIO ECONÔMICO ======= -->
+  <div class="bg-white shadow rounded-xl p-4">
+    <h2 class="text-lg font-semibold mb-3">Calendário Econômico (Hoje)</h2>
+    <iframe
+      src="https://sslecal2.investing.com?ecoDay=0&importance=3"
+      width="100%" height="450" frameborder="0">
+    </iframe>
+  </div>
 
 </body>
 </html>
