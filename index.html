@@ -1,137 +1,148 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>XAU/USD Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-    padding: 20px;
-}
-h1 { text-align: center; }
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-top: 20px;
-}
-.card {
-    background: #1c1c1c;
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px solid #333;
-}
-.price {
-    font-size: 2.2rem;
-    font-weight: bold;
-}
-.green { color: #00ff9d; }
-.red { color: #ff4e4e; }
-.chart-container {
-    margin-top: 25px;
-    border: 1px solid #333;
-    border-radius: 8px;
-    overflow: hidden;
-}
-.news-list {
-    text-align: left;
-    font-size: 0.9rem;
-    line-height: 1.3rem;
-    max-height: 150px;
-    overflow-y: auto;
-}
-</style>
-
-</head>
-<body>
-
-<h1>📈 Dashboard XAU/USD</h1>
-
-<div class="dashboard">
-
-    <div class="card">
-        <div>Preço Atual</div>
-        <div id="price" class="price">Carregando...</div>
-    </div>
-
-    <div class="card">
-        <div>Sentimento do Mercado</div>
-        <div id="sentiment">Carregando...</div>
-    </div>
-
-    <div class="card">
-        <div>Tendência</div>
-        <div id="trend">Carregando...</div>
-    </div>
-
-    <div class="card">
-        <div>Suporte / Resistência</div>
-        <div id="levels">Carregando...</div>
-    </div>
-
-</div>
-
-<!-- TRADINGVIEW CHART -->
-<div class="chart-container">
-<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=XAUUSD&interval=15&theme=dark&style=1&timezone=Etc/UTC&withdateranges=true&hide_side_toolbar=true&studies=&hideideas=true" width="100%" height="500" frameborder="0"></iframe>
-</div>
-
-<br>
-
-<!-- CALENDÁRIO ECONÔMICO -->
-<iframe src="https://sslecal2.investing.com?ecoDay=today&cols=4" width="100%" height="300" frameborder="0"></iframe>
-
-<br>
-
-<!-- NOTÍCIAS -->
-<div class="card" style="margin-top:20px;">
-    <h3>📰 Últimas Notícias</h3>
-    <div id="news" class="news-list">Carregando notícias...</div>
-</div>
-
+<!-- ===================== -->
+<!-- 🗓️ CALENDÁRIO ECONÔMICO -->
+<!-- ===================== -->
+<section id="economic-calendar" style="margin-top: 40px;">
+  <div class="card" style="background-color:#1c1c1c; color:#fff; padding:20px; border-radius:10px;">
+    <h3 style="margin-bottom:15px;">🗓️ Calendário Econômico (USD - Alta Relevância)</h3>
+    <table id="calendar-table" style="width:100%; border-collapse: collapse; text-align:left;">
+      <thead style="background-color:#333;">
+        <tr>
+          <th style="padding:8px;">Data</th>
+          <th style="padding:8px;">Evento</th>
+          <th style="padding:8px;">País</th>
+          <th style="padding:8px;">Impacto</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
 
 <script>
-// PREÇO EM TEMPO REAL
-setInterval(() => {
- fetch("https://api.exchangerate.host/latest?base=XAU&symbols=USD")
- .then(r => r.json())
- .then(d => {
-   let price = (1 / d.rates.USD).toFixed(2);
-   document.getElementById("price").innerHTML = price;
- });
-}, 3000);
+async function loadCalendar() {
+  try {
+    const response = await fetch("https://www.econdb.com/api/calendar/?format=json");
+    const data = await response.json();
+    const filtered = data.results
+      .filter(ev =>
+        ev.country === "United States" &&
+        (ev.importance === "High" || ev.importance === 3)
+      )
+      .slice(0, 10);
 
-// SENTIMENTO
-document.getElementById("sentiment").innerHTML = "65% Compra / 35% Venda";
-
-// TENDÊNCIA
-document.getElementById("trend").innerHTML = `
-H1 → Alta 📈 <br>
-H4 → Neutro ⚖️ <br>
-D1 → Alta Forte 🚀
-`;
-
-// SUPORTE / RESISTÊNCIA
-document.getElementById("levels").innerHTML = `
-S1: 2638 <br>
-S2: 2622 <br>
-R1: 2675 <br>
-R2: 2692
-`;
-
-// NOTÍCIAS (RSS)
-fetch("https://newsdata.io/api/1/news?apikey=pub_51849aabbadc8abc&category=business,world&language=pt")
-.then(r => r.json())
-.then(d => {
- let list = d.results.slice(0, 5).map(n => `• ${n.title}`).join("<br><br>");
- document.getElementById("news").innerHTML = list;
-});
+    const tableBody = document.querySelector("#calendar-table tbody");
+    tableBody.innerHTML = "";
+    filtered.forEach(ev => {
+      const date = new Date(ev.date).toLocaleString();
+      const row = `
+        <tr style="border-bottom:1px solid #333;">
+          <td style="padding:8px;">${date}</td>
+          <td style="padding:8px;">${ev.event}</td>
+          <td style="padding:8px;">${ev.country}</td>
+          <td style="padding:8px; color:red; font-weight:bold;">Alta</td>
+        </tr>`;
+      tableBody.innerHTML += row;
+    });
+  } catch (error) {
+    console.error("Erro ao carregar calendário:", error);
+    document.querySelector("#calendar-table tbody").innerHTML =
+      "<tr><td colspan='4'>Erro ao carregar dados.</td></tr>";
+  }
+}
+loadCalendar();
+setInterval(loadCalendar, 5 * 60 * 1000); // Atualiza a cada 5 minutos
 </script>
 
-</body>
-</html>
+<!-- =============================== -->
+<!-- 💹 CORRELAÇÃO DXY × XAUUSD -->
+<!-- =============================== -->
+<section id="dxy-xau" style="margin-top: 40px;">
+  <div class="card" style="background-color:#1c1c1c; color:#fff; padding:20px; border-radius:10px;">
+    <h3>💹 Correlação DXY × XAUUSD (7 dias)</h3>
+    <p><strong>Correlação:</strong> <span id="corr">Calculando...</span></p>
+    <p><strong>Recomendação:</strong> <span id="rec">...</span></p>
+    <canvas id="chartDXY" width="350" height="150"></canvas>
+    <canvas id="chartXAU" width="350" height="150" style="margin-top:15px;"></canvas>
+  </div>
+</section>
+
+<!-- Importa Chart.js para gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+async function getYahooData(symbol) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=7d&interval=1d`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const result = data.chart.result[0];
+  const timestamps = result.timestamp.map(ts => new Date(ts * 1000).toLocaleDateString());
+  const closes = result.indicators.quote[0].close.filter(v => v !== null);
+  return { timestamps, closes };
+}
+
+function pearson(x, y) {
+  const meanX = x.reduce((a,b)=>a+b)/x.length;
+  const meanY = y.reduce((a,b)=>a+b)/y.length;
+  const num = x.map((xi,i)=>(xi-meanX)*(y[i]-meanY)).reduce((a,b)=>a+b);
+  const den = Math.sqrt(
+    x.map(xi=>(xi-meanX)**2).reduce((a,b)=>a+b) *
+    y.map(yi=>(yi-meanY)**2).reduce((a,b)=>a+b)
+  );
+  return num/den;
+}
+
+let chartDXY, chartXAU;
+
+function renderChart(ctx, labels, data, color, title) {
+  return new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: title,
+        data: data,
+        borderColor: color,
+        backgroundColor: "transparent",
+        borderWidth: 2,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      scales: { x: { display: false }, y: { display: false } },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+async function updateCorrelation() {
+  try {
+    const dxy = await getYahooData("DX-Y.NYB");
+    const xau = await getYahooData("XAUUSD=X");
+    const corr = pearson(dxy.closes, xau.closes);
+    document.getElementById("corr").innerText = corr.toFixed(2);
+
+    const dxyChange = dxy.closes.at(-1) - dxy.closes.at(-2);
+    const xauChange = xau.closes.at(-1) - xau.closes.at(-2);
+
+    let rec = "⚖️ Neutro";
+    if (dxyChange > 0 && xauChange < 0) rec = "📉 Venda Ouro";
+    else if (dxyChange < 0 && xauChange > 0) rec = "📈 Compra Ouro";
+
+    document.getElementById("rec").innerText = rec;
+
+    // Atualiza mini-gráficos
+    if (chartDXY) chartDXY.destroy();
+    if (chartXAU) chartXAU.destroy();
+
+    chartDXY = renderChart(document.getElementById("chartDXY"), dxy.timestamps, dxy.closes, "#00ffff", "DXY");
+    chartXAU = renderChart(document.getElementById("chartXAU"), xau.timestamps, xau.closes, "#ffd700", "XAUUSD");
+  } catch (error) {
+    console.error("Erro ao calcular correlação:", error);
+    document.getElementById("corr").innerText = "Erro";
+    document.getElementById("rec").innerText = "Indisponível";
+  }
+}
+
+updateCorrelation();
+setInterval(updateCorrelation, 5 * 60 * 1000); // Atualiza a cada 5 minutos
+</script>
