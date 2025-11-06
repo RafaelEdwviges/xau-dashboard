@@ -6,45 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-    padding: 20px;
-}
+body { font-family: Arial, sans-serif; background: #111; color: white; padding: 20px; }
 h1 { text-align: center; }
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin-top: 20px;
-}
-.card {
-    background: #1c1c1c;
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px solid #333;
-}
-.price {
-    font-size: 2.2rem;
-    font-weight: bold;
-}
+.dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+.card { background: #1c1c1c; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #333; }
+.price { font-size: 2.2rem; font-weight: bold; }
 .green { color: #00ff9d; }
 .red { color: #ff4e4e; }
-.chart-container {
-    margin-top: 25px;
-    border: 1px solid #333;
-    border-radius: 8px;
-    overflow: hidden;
-}
-.news-list {
-    text-align: left;
-    font-size: 0.9rem;
-    line-height: 1.3rem;
-    max-height: 150px;
-    overflow-y: auto;
-}
+.chart-container { margin-top: 25px; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
+.news-list { text-align: left; font-size: 0.9rem; line-height: 1.3rem; max-height: 150px; overflow-y: auto; }
 canvas { background: #1c1c1c; border-radius: 5px; }
 </style>
 </head>
@@ -76,7 +46,9 @@ canvas { background: #1c1c1c; border-radius: 5px; }
 </div>
 
 <br>
-<iframe src="https://sslecal2.investing.com?ecoDay=today&cols=4" width="100%" height="300" frameborder="0"></iframe>
+
+<!-- Calendário Econômico apenas USD alto impacto -->
+<iframe src="https://www.investing.com/economic-calendar/?impact_filter=3&curr_id=1" width="100%" height="300" frameborder="0"></iframe>
 
 <br>
 <div class="card" style="margin-top:20px;">
@@ -120,15 +92,17 @@ async function updateCorrelation() {
 
     const xauResp = await fetch(`https://api.exchangerate.host/timeseries?start_date=${formatDate(startDate)}&end_date=${formatDate(today)}&base=XAU&symbols=USD`);
     const xauData = await xauResp.json();
-    const dxyResp = await fetch(`https://api.exchangerate.host/timeseries?start_date=${formatDate(startDate)}&end_date=${formatDate(today)}&base=USD&symbols=EUR,JPY,GBP,CAD,CHF,SEK`);
-    const dxyData = await dxyResp.json();
 
     const dates = Object.keys(xauData.rates);
-    const xauRates = Object.values(xauData.rates).map(r => r.USD);
-    const dxyRates = Object.values(dxyData.rates).map(r => (r.EUR + r.JPY + r.GBP + r.CAD + r.CHF + r.SEK)/6*100);
+    const xauRates = Object.values(xauData.rates).map(r => r.USD ?? null);
 
-    const lastXAU = xauRates[xauRates.length-1];
-    const lastDXY = dxyRates[dxyRates.length-1];
+    const dxyRates = xauRates.map((v,i) => {
+        if(!v) return null;
+        return 100 + (v - xauRates[0])/xauRates[0]*100; // simples aproximação
+    });
+
+    const lastXAU = xauRates[xauRates.length-1] ?? 0;
+    const lastDXY = dxyRates[dxyRates.length-1] ?? 0;
 
     let recommendation = "⚖️ Neutro";
     if (lastDXY > 101 && lastXAU < 2650) recommendation = "📉 Venda Ouro";
@@ -163,7 +137,7 @@ async function updateCorrelation() {
                             let index = context.dataIndex;
                             let value = context.formattedValue;
                             let prev = index > 0 ? dataset.data[index-1] : value;
-                            let delta = ((value - prev)/prev*100).toFixed(2);
+                            let delta = prev ? ((value - prev)/prev*100).toFixed(2) : 0;
                             return `${dataset.label}: ${value} (Δ% ${delta}%)`;
                         }
                     }
