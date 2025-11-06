@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>XAU/USD Dashboard Premium</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: Arial, sans-serif; background: #111; color: white; padding: 20px; }
 h1 { text-align: center; }
@@ -15,7 +14,7 @@ h1 { text-align: center; }
 .red { color: #ff4e4e; }
 .chart-container { margin-top: 25px; border: 1px solid #333; border-radius: 8px; overflow: hidden; }
 .news-list { text-align: left; font-size: 0.9rem; line-height: 1.3rem; max-height: 150px; overflow-y: auto; }
-canvas { background: #1c1c1c; border-radius: 5px; }
+iframe { border: none; }
 </style>
 </head>
 <body>
@@ -41,14 +40,15 @@ canvas { background: #1c1c1c; border-radius: 5px; }
     </div>
 </div>
 
+<!-- Gráfico principal XAU/USD -->
 <div class="chart-container">
-<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=XAUUSD&interval=15&theme=dark&style=1&timezone=Etc/UTC&withdateranges=true&hide_side_toolbar=true&studies=&hideideas=true" width="100%" height="500" frameborder="0"></iframe>
+<iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_xauusd&symbol=XAUUSD&interval=15&theme=dark&style=1&timezone=Etc/UTC&withdateranges=true&hide_side_toolbar=true&studies=&hideideas=true" width="100%" height="500"></iframe>
 </div>
 
 <br>
 
 <!-- Calendário Econômico apenas USD alto impacto -->
-<iframe src="https://www.investing.com/economic-calendar/?impact_filter=3&curr_id=1" width="100%" height="300" frameborder="0"></iframe>
+<iframe src="https://www.investing.com/economic-calendar/?impact_filter=3&curr_id=1" width="100%" height="300"></iframe>
 
 <br>
 <div class="card" style="margin-top:20px;">
@@ -56,13 +56,20 @@ canvas { background: #1c1c1c; border-radius: 5px; }
     <div id="news" class="news-list">Carregando notícias...</div>
 </div>
 
+<!-- Correlação DXY × XAU/USD -->
 <div class="card" style="margin-top:20px;">
-  <h3>💹 Correlação DXY × XAU/USD (7 dias)</h3>
-  <div id="correlation">Carregando...</div>
-  <canvas id="correlationChart" width="400" height="200"></canvas>
+  <h3>💹 DXY × XAU/USD (7 dias)</h3>
+  <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_dxy_xau&symbol=DXY%2CXAUUSD&interval=D&theme=dark&style=1&timezone=Etc%2FUTC&studies=&hideideas=true&symboledit=1&saveimage=1" width="100%" height="400"></iframe>
+</div>
+
+<!-- Gráfico de variação percentual diária -->
+<div class="card" style="margin-top:20px;">
+  <h3>📊 Δ% Diário: XAU/USD vs DXY</h3>
+  <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_pct_change&symbol=XAUUSD%2CDXY&interval=D&theme=dark&style=2&timezone=Etc/UTC&hide_side_toolbar=true&studies=&hideideas=true" width="100%" height="400"></iframe>
 </div>
 
 <script>
+// Atualização do preço XAU/USD
 setInterval(() => {
  fetch("https://api.exchangerate.host/latest?base=XAU&symbols=USD")
  .then(r => r.json())
@@ -70,93 +77,21 @@ setInterval(() => {
    let price = (1 / d.rates.USD).toFixed(2);
    document.getElementById("price").innerHTML = price;
  });
-}, 3000);
+}, 5000);
 
+// Sentimento e tendências
 document.getElementById("sentiment").innerHTML = "65% Compra / 35% Venda";
 document.getElementById("trend").innerHTML = "H1 → Alta 📈 <br>H4 → Neutro ⚖️ <br>D1 → Alta Forte 🚀";
 document.getElementById("levels").innerHTML = "S1: 2638 <br>S2: 2622 <br>R1: 2675 <br>R2: 2692";
 
+// Notícias
 fetch("https://newsdata.io/api/1/news?apikey=pub_51849aabbadc8abc&category=business,world&language=pt")
 .then(r => r.json())
 .then(d => {
  let list = d.results.slice(0, 5).map(n => `• ${n.title}`).join("<br><br>");
  document.getElementById("news").innerHTML = list;
 });
-
-async function updateCorrelation() {
-  try {
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() - 7);
-    const formatDate = d => d.toISOString().slice(0,10);
-
-    const xauResp = await fetch(`https://api.exchangerate.host/timeseries?start_date=${formatDate(startDate)}&end_date=${formatDate(today)}&base=XAU&symbols=USD`);
-    const xauData = await xauResp.json();
-
-    const dates = Object.keys(xauData.rates);
-    const xauRates = Object.values(xauData.rates).map(r => r.USD ?? null);
-
-    const dxyRates = xauRates.map((v,i) => {
-        if(!v) return null;
-        return 100 + (v - xauRates[0])/xauRates[0]*100; // simples aproximação
-    });
-
-    const lastXAU = xauRates[xauRates.length-1] ?? 0;
-    const lastDXY = dxyRates[dxyRates.length-1] ?? 0;
-
-    let recommendation = "⚖️ Neutro";
-    if (lastDXY > 101 && lastXAU < 2650) recommendation = "📉 Venda Ouro";
-    if (lastDXY < 99 && lastXAU > 2650) recommendation = "📈 Compra Ouro";
-
-    document.getElementById("correlation").innerHTML = `
-      Último DXY (estimado): ${lastDXY.toFixed(2)} <br>
-      Último XAU/USD: ${lastXAU.toFixed(2)} <br>
-      Recomendação: ${recommendation}
-    `;
-
-    const xauBadges = xauRates.map((v,i,a)=> i===0?null:v>a[i-1]?'buy':'sell');
-    const ctx = document.getElementById('correlationChart').getContext('2d');
-    if(window.correlationChartInstance) window.correlationChartInstance.destroy();
-    window.correlationChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dates,
-            datasets: [
-                { label: 'XAU/USD', data: xauRates, borderColor: '#00ff9d', backgroundColor: 'rgba(0,255,157,0.2)', yAxisID: 'y1', pointBackgroundColor: xauBadges.map(b=> b==='buy'?'#00ff9d':'#ff4e4e') },
-                { label: 'DXY (estimado)', data: dxyRates, borderColor: '#ff4e4e', backgroundColor: 'rgba(255,78,78,0.2)', yAxisID: 'y2' }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { labels: { color: 'white' } },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let dataset = context.dataset;
-                            let index = context.dataIndex;
-                            let value = context.formattedValue;
-                            let prev = index > 0 ? dataset.data[index-1] : value;
-                            let delta = prev ? ((value - prev)/prev*100).toFixed(2) : 0;
-                            return `${dataset.label}: ${value} (Δ% ${delta}%)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y1: { type: 'linear', position: 'left', ticks: { color: '#00ff9d' } },
-                y2: { type: 'linear', position: 'right', ticks: { color: '#ff4e4e' }, grid: { drawOnChartArea: false } },
-                x: { ticks: { color: 'white' } }
-            }
-        }
-    });
-  } catch (e) {
-    document.getElementById("correlation").innerHTML = "Erro ao carregar dados.";
-  }
-}
-
-updateCorrelation();
-setInterval(updateCorrelation, 5*60*1000);
 </script>
+
 </body>
 </html>
