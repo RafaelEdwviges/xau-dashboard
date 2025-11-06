@@ -4,13 +4,11 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard XAU/USD</title>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
 
 <style>
-  body {
-    background: #f6f7f9;
-    font-family: Arial, sans-serif;
-  }
+  body { background: #f6f7f9; font-family: Arial, sans-serif; }
 </style>
 
 </head>
@@ -19,31 +17,33 @@
 <h1 class="text-3xl font-bold mb-2">XAU/USD Dashboard</h1>
 <p class="text-sm text-gray-600 mb-6">Monitoramento do Ouro em Tempo Real</p>
 
+<!-- Carrega primeiro -->
+<script src="https://s3.tradingview.com/tv.js"></script>
+
 <!-- GRÁFICO TRADINGVIEW -->
 <div class="bg-white shadow rounded-xl p-4 mb-8">
   <h2 class="text-lg font-semibold mb-3">Preço XAU/USD — Tempo Real</h2>
-  <div class="tradingview-widget-container">
-    <div id="tradingview_chart" style="height:420px;"></div>
-  </div>
+  <div id="tradingview_chart" style="height:420px;"></div>
 
-  <script type="text/javascript">
-    new TradingView.widget({
-      "width": "100%",
-      "height": 420,
-      "symbol": "OANDA:XAUUSD",
-      "interval": "15",
-      "timezone": "America/Sao_Paulo",
-      "theme": "light",
-      "style": "1",
-      "locale": "br",
-      "toolbar_bg": "#f1f3f6",
-      "enable_publishing": false,
-      "hide_top_toolbar": false,
-      "allow_symbol_change": true,
-      "container_id": "tradingview_chart"
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      new TradingView.widget({
+        "width": "100%",
+        "height": 420,
+        "symbol": "OANDA:XAUUSD",
+        "interval": "15",
+        "timezone": "America/Sao_Paulo",
+        "theme": "light",
+        "style": "1",
+        "locale": "br",
+        "toolbar_bg": "#f1f3f6",
+        "enable_publishing": false,
+        "hide_top_toolbar": false,
+        "allow_symbol_change": true,
+        "container_id": "tradingview_chart"
+      });
     });
   </script>
-  <script src="https://s3.tradingview.com/tv.js"></script>
 </div>
 
 <!-- CALENDÁRIO -->
