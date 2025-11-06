@@ -5,7 +5,49 @@
   <title>XAU/USD Dashboard</title>
 
   <!-- Import CDN do Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  async function getPrice() {
+    const res = await fetch("https://api.metals.live/v1/spot");
+    const data = await res.json();
+    return data[0].gold; // preço do ouro
+  }
+
+  let chart, prices = [];
+
+  async function updateDashboard() {
+    try {
+      const price = await getPrice();
+      document.getElementById("price").innerText = "$ " + price.toFixed(2);
+      prices.push(price);
+
+      if (prices.length > 20) prices.shift();
+
+      if (!chart) {
+        chart = new Chart(document.getElementById("chart"), {
+          type: 'line',
+          data: {
+            labels: prices.map((_, i) => i + 1),
+            datasets: [{
+              label: 'XAU/USD em Tempo Real',
+              data: prices,
+              borderWidth: 2
+            }]
+          }
+        });
+      } else {
+        chart.data.datasets[0].data = prices;
+        chart.update();
+      }
+
+    } catch (error) {
+      document.getElementById("price").innerText = "Erro ao buscar preço";
+    }
+  }
+
+  setInterval(updateDashboard, 5000);
+  updateDashboard();
+</script>
+
 
   <style>
     body {
