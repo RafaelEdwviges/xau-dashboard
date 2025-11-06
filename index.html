@@ -1,3 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>XAU/USD Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #price {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: gold;
+    }
+    #status {
+      font-size: 16px;
+      opacity: 0.7;
+      margin-bottom: 20px;
+    }
+    canvas {
+      width: 90% !important;
+      max-width: 900px;
+      height: 350px !important;
+      margin: auto;
+      border: 1px solid gold;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>XAU/USD Dashboard</h1>
+  <div id="price">Carregando...</div>
+  <div id="status">Obtendo dados em tempo real...</div>
+  <canvas id="chart"></canvas>
+
 <script>
   async function getGoldPrice() {
     try {
@@ -5,7 +47,6 @@
       const data = await response.json();
       return data[0][1]; // XAU/USD
     } catch(err) {
-      console.log(err);
       return null;
     }
   }
@@ -17,39 +58,8 @@
     const price = await getGoldPrice();
     
     if (!price) {
-      document.getElementById("price").innerText = "Erro ao obter preço";
+      document.getElementById("status").innerText = "⚠ Erro ao obter preço (aguardando reconexão)";
       return;
     }
 
-    document.getElementById("price").innerText = "$ " + price.toFixed(2);
-
-    prices.push(price);
-    if (prices.length > 50) prices.shift();
-
-    if (!chart) {
-      chart = new Chart(document.getElementById("chart"), {
-        type: 'line',
-        data: {
-          labels: prices.map((_, i) => i + 1),
-          datasets: [{
-            label: "XAU/USD",
-            data: prices,
-            borderColor: "gold",
-            borderWidth: 3,
-            pointRadius: 0
-          }]
-        },
-        options: {
-          animations: false,
-          scales: { y: { beginAtZero: false } }
-        }
-      });
-    } else {
-      chart.data.datasets[0].data = prices;
-      chart.update();
-    }
-  }
-
-  update();
-  setInterval(update, 5000);
-</script>
+    document.getEleme
